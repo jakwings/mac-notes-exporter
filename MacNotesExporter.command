@@ -4,10 +4,10 @@ set -e
 
 export PATH='/usr/bin:/bin:/usr/sbin:/sbin'
 
-dir=$(dirname -- "$0")
+outdir=$(dirname -- "$0")
 
-sqlite3 ~/Library/Containers/com.apple.Notes/Data/Library/Notes/NotesV6.storedata \
-> "${dir}/Notes.html" 2>&1 <<'EOT'
+run() {
+sqlite3 "$1" <<'EOT'
 
 SELECT PRINTF('<!DOCTYPE html>
 <html>
@@ -99,3 +99,13 @@ JOIN folder ON note.fid = folder.id
 SELECT PRINTF('</body></html>');
 
 EOT
+}
+
+count=0
+for database in ~/Library/Containers/com.apple.Notes/Data/Library/Notes/*.storedata
+do
+  count=$(( count + 1 ))
+  notes="${outdir}/Notes-${count}.html"
+  error="${outdir}/Notes-${count}.txt"
+  run "${database}" > "${notes}" 2> "${error}" || true
+done
